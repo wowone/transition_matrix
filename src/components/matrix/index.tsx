@@ -100,6 +100,7 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
   };
 
   const visibleColumns = Object.keys(Object.values(matrixData)[0]).filter(col => !hiddenCols.includes(col));
+  const visibleRows = Object.keys(matrixData).filter(row => !hiddenRows.includes(row));
 
   return (
     <div className="w-full max-w-[1200px] mx-auto">
@@ -113,21 +114,21 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
         <option value="column-wise">Column-wise</option>
       </select>
       
-      <div className="relative overflow-x-auto">
+      <div className="relative overflow-auto">
         <DragDropContext onDragEnd={() => {}}>
           <table className="border-collapse w-full">
             <thead>
               <tr>
-                <th className="p-2 border sticky left-0 bg-white z-10"></th>
+                <th className="p-2 border sticky left-0 top-0 bg-white z-20"></th>
                 {visibleColumns.map((colName, index) => (
-                  <th key={index} className="p-2 border">
+                  <th key={index} className="p-2 border sticky top-0 bg-white z-10">
                     {colName}
                     <Eye onClick={() => toggleColVisibility(colName)} className="cursor-pointer ml-1" />
                     <Pin onClick={() => toggleColPin(colName)} className="cursor-pointer ml-1" />
                     <ArrowUpDown onClick={() => sortByColumn(colName)} className="cursor-pointer ml-1" />
                   </th>
                 ))}
-                <th className="p-2 border sticky right-0 bg-white z-10">
+                <th className="p-2 border sticky top-0 right-0 bg-white z-20">
                   <button 
                     onClick={() => setIsHiddenColsPanelOpen(!isHiddenColsPanelOpen)}
                     className="bg-gray-200 p-2 rounded w-full text-left"
@@ -136,7 +137,7 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
                   </button>
                 </th>
                 {isHiddenColsPanelOpen && hiddenCols.map((colName, index) => (
-                  <th key={`hidden-${index}`} className="p-2 border bg-gray-200">
+                  <th key={`hidden-${index}`} className="p-2 border sticky top-0 bg-gray-200 z-10">
                     {colName}
                     <EyeOff onClick={() => toggleColVisibility(colName)} className="cursor-pointer ml-1" />
                   </th>
@@ -144,59 +145,72 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(matrixData).map(([rowIndex, row], index) => (
-                !hiddenRows.includes(rowIndex) && (
-                  <tr key={rowIndex}>
-                    <td className="p-2 border sticky left-0 bg-white z-10">
-                      {rowIndex}
-                      <Eye onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer ml-1" />
-                      <Pin onClick={() => toggleRowPin(rowIndex)} className="cursor-pointer ml-1" />
-                      <ArrowUpDown onClick={() => sortByRow(rowIndex)} className="cursor-pointer ml-1" />
+              {visibleRows.map((rowIndex) => (
+                <tr key={rowIndex}>
+                  <td className="p-2 border sticky left-0 bg-white z-10">
+                    {rowIndex}
+                    <Eye onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer ml-1" />
+                    <Pin onClick={() => toggleRowPin(rowIndex)} className="cursor-pointer ml-1" />
+                    <ArrowUpDown onClick={() => sortByRow(rowIndex)} className="cursor-pointer ml-1" />
+                  </td>
+                  {visibleColumns.map((colName, cellIndex) => (
+                    <td 
+                      key={cellIndex} 
+                      className="p-2 border"
+                      style={{ backgroundColor: getCellColor(matrixData[rowIndex][colName] as number, rowIndex, colName) }}
+                    >
+                      {matrixData[rowIndex][colName]}
                     </td>
-                    {visibleColumns.map((colName, cellIndex) => (
-                      <td 
-                        key={cellIndex} 
-                        className="p-2 border"
-                        style={{ backgroundColor: getCellColor(row[colName] as number, rowIndex, colName) }}
-                      >
-                        {row[colName]}
-                      </td>
-                    ))}
-                    <td className="p-2 border sticky right-0 bg-white z-10"></td>
-                    {isHiddenColsPanelOpen && hiddenCols.map((colName, cellIndex) => (
-                      <td 
-                        key={`hidden-${cellIndex}`} 
-                        className="p-2 border bg-gray-200"
-                      >
-                        {row[colName]}
-                      </td>
-                    ))}
-                  </tr>
-                )
+                  ))}
+                  <td className="p-2 border sticky right-0 bg-white z-10"></td>
+                  {isHiddenColsPanelOpen && hiddenCols.map((colName, cellIndex) => (
+                    <td 
+                      key={`hidden-${cellIndex}`} 
+                      className="p-2 border bg-gray-200"
+                    >
+                      {matrixData[rowIndex][colName]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              <tr>
+                <td colSpan={visibleColumns.length + 2 + (isHiddenColsPanelOpen ? hiddenCols.length : 0)} className="p-2 border sticky bottom-0 bg-white z-20">
+                  <button 
+                    onClick={() => setIsHiddenRowsPanelOpen(!isHiddenRowsPanelOpen)}
+                    className="bg-gray-200 p-2 rounded w-full text-left"
+                  >
+                    {isHiddenRowsPanelOpen ? 'Hide' : 'Show'} Hidden Rows ({hiddenRows.length})
+                  </button>
+                </td>
+              </tr>
+              {isHiddenRowsPanelOpen && hiddenRows.map((rowIndex) => (
+                <tr key={`hidden-${rowIndex}`} className="bg-gray-200">
+                  <td className="p-2 border sticky left-0 bg-gray-200 z-10">
+                    {rowIndex}
+                    <EyeOff onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer ml-1" />
+                  </td>
+                  {visibleColumns.map((colName, cellIndex) => (
+                    <td 
+                      key={cellIndex} 
+                      className="p-2 border"
+                    >
+                      {matrixData[rowIndex][colName]}
+                    </td>
+                  ))}
+                  <td className="p-2 border sticky right-0 bg-gray-200 z-10"></td>
+                  {isHiddenColsPanelOpen && hiddenCols.map((colName, cellIndex) => (
+                    <td 
+                      key={`hidden-${cellIndex}`} 
+                      className="p-2 border"
+                    >
+                      {matrixData[rowIndex][colName]}
+                    </td>
+                  ))}
+                </tr>
               ))}
             </tbody>
           </table>
         </DragDropContext>
-      </div>
-
-      {/* Hidden Rows Panel */}
-      <div className="mt-4">
-        <button 
-          onClick={() => setIsHiddenRowsPanelOpen(!isHiddenRowsPanelOpen)}
-          className="bg-gray-200 p-2 rounded"
-        >
-          {isHiddenRowsPanelOpen ? 'Hide' : 'Show'} Hidden Rows ({hiddenRows.length})
-        </button>
-        {isHiddenRowsPanelOpen && (
-          <div className="mt-2 border p-2">
-            {hiddenRows.map(rowIndex => (
-              <div key={rowIndex} className="flex items-center justify-between p-1">
-                <span>{rowIndex}</span>
-                <EyeOff onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer" />
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
