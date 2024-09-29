@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Eye, Pin, ArrowUpDown } from 'lucide-react';
+import { Eye, EyeOff, Pin, ArrowUpDown } from 'lucide-react';
 
 interface TransitionMatrixProps {
   data: Record<string, Record<string, number>>;
@@ -13,15 +13,15 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
   const [pinnedRows, setPinnedRows] = useState<string[]>([]);
   const [pinnedCols, setPinnedCols] = useState<string[]>([]);
   const [heatmapOption, setHeatmapOption] = useState<'global' | 'row-wise' | 'column-wise'>('global');
+  const [isHiddenRowsPanelOpen, setIsHiddenRowsPanelOpen] = useState(false);
+  const [isHiddenColsPanelOpen, setIsHiddenColsPanelOpen] = useState(false);
 
-  // Calculate min and max values for color scaling
   const { globalMin, globalMax, rowMinMax, colMinMax } = useMemo(() => {
     let gMin = Infinity;
     let gMax = -Infinity;
     const rMinMax: Record<string, { min: number; max: number }> = {};
     const cMinMax: Record<string, { min: number; max: number }> = {};
 
-    // Initialize column min-max
     const firstRow = Object.values(matrixData)[0];
     Object.keys(firstRow).forEach(colKey => {
       cMinMax[colKey] = { min: Infinity, max: -Infinity };
@@ -48,7 +48,6 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
     return { globalMin: gMin, globalMax: gMax, rowMinMax: rMinMax, colMinMax: cMinMax };
   }, [matrixData]);
 
-  // Function to calculate cell color based on value and heatmap option
   const getCellColor = (value: number, rowKey: string, colKey: string) => {
     let ratio: number;
 
@@ -61,10 +60,10 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
       const { min, max } = colMinMax[colKey];
       ratio = (value - min) / (max - min);
     } else {
-      ratio = 0; // Default case, shouldn't occur
+      ratio = 0;
     }
 
-    const hue = ratio * 120; // 0 is red, 120 is green
+    const hue = ratio * 120;
     return `hsl(${hue}, 100%, 50%)`;
   };
 
@@ -124,57 +123,80 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
                 !hiddenCols.includes(colName) && (
                   <th key={index} className="p-2 border">
                     {colName}
-                    <div className="flex">
-                      <Eye onClick={() => toggleColVisibility(colName)} className="cursor-pointer" />
-                      <Pin onClick={() => toggleColPin(colName)} className="cursor-pointer" />
-                      <ArrowUpDown onClick={() => sortByColumn(colName)} className="cursor-pointer" />
-                    </div>
+                    <Eye onClick={() => toggleColVisibility(colName)} className="cursor-pointer ml-1" />
+                    <Pin onClick={() => toggleColPin(colName)} className="cursor-pointer ml-1" />
+                    <ArrowUpDown onClick={() => sortByColumn(colName)} className="cursor-pointer ml-1" />
                   </th>
                 )
               ))}
             </tr>
           </thead>
-          <Droppable droppableId="table-body">
-            {(provided) => (
-              <tbody {...provided.droppableProps} ref={provided.innerRef}>
-                {Object.entries(matrixData).map(([rowIndex, row], index) => (
-                  !hiddenRows.includes(rowIndex) && (
-                    <Draggable key={rowIndex} draggableId={rowIndex} index={index}>
-                      {(provided) => (
-                        <tr
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                        >
-                          <td className="p-2 border">
-                            {rowIndex}
-                            <div className="flex">
-                              <Eye onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer" />
-                              <Pin onClick={() => toggleRowPin(rowIndex)} className="cursor-pointer" />
-                              <ArrowUpDown onClick={() => sortByRow(rowIndex)} className="cursor-pointer" />
-                            </div>
-                          </td>
-                          {Object.entries(row).map(([colName, cell], cellIndex) => (
-                            !hiddenCols.includes(colName) && (
-                              <td 
-                                key={cellIndex} 
-                                className="p-2 border"
-                                style={{ backgroundColor: getCellColor(cell as number, rowIndex, colName) }}
-                              >
-                                {cell}
-                              </td>
-                            )
-                          ))}
-                        </tr>
-                      )}
-                    </Draggable>
-                  )
-                ))}
-                {provided.placeholder}
-              </tbody>
-            )}
-          </Droppable>
+          <tbody>
+            {Object.entries(matrixData).map(([rowIndex, row], index) => (
+              !hiddenRows.includes(rowIndex) && (
+                <tr key={rowIndex}>
+                  <td className="p-2 border">
+                    {rowIndex}
+                    <Eye onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer ml-1" />
+                    <Pin onClick={() => toggleRowPin(rowIndex)} className="cursor-pointer ml-1" />
+                    <ArrowUpDown onClick={() => sortByRow(rowIndex)} className="cursor-pointer ml-1" />
+                  </td>
+                  {Object.entries(row).map(([colName, cell], cellIndex) => (
+                    !hiddenCols.includes(colName) && (
+                      <td 
+                        key={cellIndex} 
+                        className="p-2 border"
+                        style={{ backgroundColor: getCellColor(cell as number, rowIndex, colName) }}
+                      >
+                        {cell}
+                      </td>
+                    )
+                  ))}
+                </tr>
+              )
+            ))}
+          </tbody>
         </table>
+
+        {/* Hidden Rows Panel */}
+        <div className="mt-4">
+          <button 
+            onClick={() => setIsHiddenRowsPanelOpen(!isHiddenRowsPanelOpen)}
+            className="bg-gray-200 p-2 rounded"
+          >
+            {isHiddenRowsPanelOpen ? 'Hide' : 'Show'} Hidden Rows ({hiddenRows.length})
+          </button>
+          {isHiddenRowsPanelOpen && (
+            <div className="mt-2 border p-2">
+              {hiddenRows.map(rowIndex => (
+                <div key={rowIndex} className="flex items-center justify-between p-1">
+                  <span>{rowIndex}</span>
+                  <EyeOff onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Hidden Columns Panel */}
+        <div className="mt-4">
+          <button 
+            onClick={() => setIsHiddenColsPanelOpen(!isHiddenColsPanelOpen)}
+            className="bg-gray-200 p-2 rounded"
+          >
+            {isHiddenColsPanelOpen ? 'Hide' : 'Show'} Hidden Columns ({hiddenCols.length})
+          </button>
+          {isHiddenColsPanelOpen && (
+            <div className="mt-2 border p-2">
+              {hiddenCols.map(colName => (
+                <div key={colName} className="flex items-center justify-between p-1">
+                  <span>{colName}</span>
+                  <EyeOff onClick={() => toggleColVisibility(colName)} className="cursor-pointer" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </DragDropContext>
     </div>
   );
