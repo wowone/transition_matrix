@@ -1,35 +1,95 @@
-// File: src/components/matrix/index.tsx
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Eye, Pin, ArrowUpDown } from 'lucide-react';
 
 interface TransitionMatrixProps {
-  data: Record<string, Record<string, any>>;
+  data: Record<string, Record<string, number>>;
 }
 
 const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
-  const [tableData, setTableData] = useState(data);
+  const [matrixData, setMatrixData] = useState(data);
   const [hiddenRows, setHiddenRows] = useState<string[]>([]);
   const [hiddenCols, setHiddenCols] = useState<string[]>([]);
   const [pinnedRows, setPinnedRows] = useState<string[]>([]);
   const [pinnedCols, setPinnedCols] = useState<string[]>([]);
   const [heatmapOption, setHeatmapOption] = useState<'global' | 'row-wise' | 'column-wise'>('global');
 
+  // Calculate min and max values for color scaling
+  const { globalMin, globalMax, rowMinMax, colMinMax } = useMemo(() => {
+    let gMin = Infinity;
+    let gMax = -Infinity;
+    const rMinMax: Record<string, { min: number; max: number }> = {};
+    const cMinMax: Record<string, { min: number; max: number }> = {};
+
+    // Initialize column min-max
+    const firstRow = Object.values(matrixData)[0];
+    Object.keys(firstRow).forEach(colKey => {
+      cMinMax[colKey] = { min: Infinity, max: -Infinity };
+    });
+
+    Object.entries(matrixData).forEach(([rowKey, row]) => {
+      let rowMin = Infinity;
+      let rowMax = -Infinity;
+
+      Object.entries(row).forEach(([colKey, value]) => {
+        if (typeof value === 'number') {
+          gMin = Math.min(gMin, value);
+          gMax = Math.max(gMax, value);
+          rowMin = Math.min(rowMin, value);
+          rowMax = Math.max(rowMax, value);
+          cMinMax[colKey].min = Math.min(cMinMax[colKey].min, value);
+          cMinMax[colKey].max = Math.max(cMinMax[colKey].max, value);
+        }
+      });
+
+      rMinMax[rowKey] = { min: rowMin, max: rowMax };
+    });
+
+    return { globalMin: gMin, globalMax: gMax, rowMinMax: rMinMax, colMinMax: cMinMax };
+  }, [matrixData]);
+
+  // Function to calculate cell color based on value and heatmap option
+  const getCellColor = (value: number, rowKey: string, colKey: string) => {
+    let ratio: number;
+
+    if (heatmapOption === 'global') {
+      ratio = (value - globalMin) / (globalMax - globalMin);
+    } else if (heatmapOption === 'row-wise') {
+      const { min, max } = rowMinMax[rowKey];
+      ratio = (value - min) / (max - min);
+    } else if (heatmapOption === 'column-wise') {
+      const { min, max } = colMinMax[colKey];
+      ratio = (value - min) / (max - min);
+    } else {
+      ratio = 0; // Default case, shouldn't occur
+    }
+
+    const hue = ratio * 120; // 0 is red, 120 is green
+    return `hsl(${hue}, 100%, 50%)`;
+  };
+
   const toggleRowVisibility = (rowIndex: string) => {
-    // Implementation for toggling row visibility
+    setHiddenRows(prev => 
+      prev.includes(rowIndex) ? prev.filter(r => r !== rowIndex) : [...prev, rowIndex]
+    );
   };
 
   const toggleColVisibility = (colName: string) => {
-    // Implementation for toggling column visibility
+    setHiddenCols(prev => 
+      prev.includes(colName) ? prev.filter(c => c !== colName) : [...prev, colName]
+    );
   };
 
   const toggleRowPin = (rowIndex: string) => {
-    // Implementation for toggling row pin
+    setPinnedRows(prev => 
+      prev.includes(rowIndex) ? prev.filter(r => r !== rowIndex) : [...prev, rowIndex]
+    );
   };
 
   const toggleColPin = (colName: string) => {
-    // Implementation for toggling column pin
+    setPinnedCols(prev => 
+      prev.includes(colName) ? prev.filter(c => c !== colName) : [...prev, colName]
+    );
   };
 
   const sortByRow = (rowIndex: string) => {
@@ -42,10 +102,6 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
 
   const onDragEnd = (result: any) => {
     // Implementation for drag and drop functionality
-  };
-
-  const applyHeatmap = () => {
-    // Implementation for applying heatmap
   };
 
   return (
@@ -64,45 +120,55 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
           <thead>
             <tr>
               <th></th>
-              {Object.keys(Object.values(tableData)[0]).map((colName, index) => (
-                <th key={index} className="p-2 border">
-                  {colName}
-                  <div className="flex">
-                    <Eye onClick={() => toggleColVisibility(colName)} className="cursor-pointer" />
-                    <Pin onClick={() => toggleColPin(colName)} className="cursor-pointer" />
-                    <ArrowUpDown onClick={() => sortByColumn(colName)} className="cursor-pointer" />
-                  </div>
-                </th>
+              {Object.keys(Object.values(matrixData)[0]).map((colName, index) => (
+                !hiddenCols.includes(colName) && (
+                  <th key={index} className="p-2 border">
+                    {colName}
+                    <div className="flex">
+                      <Eye onClick={() => toggleColVisibility(colName)} className="cursor-pointer" />
+                      <Pin onClick={() => toggleColPin(colName)} className="cursor-pointer" />
+                      <ArrowUpDown onClick={() => sortByColumn(colName)} className="cursor-pointer" />
+                    </div>
+                  </th>
+                )
               ))}
             </tr>
           </thead>
           <Droppable droppableId="table-body">
             {(provided) => (
               <tbody {...provided.droppableProps} ref={provided.innerRef}>
-                {Object.entries(tableData).map(([rowIndex, row], index) => (
-                  <Draggable key={rowIndex} draggableId={rowIndex} index={index}>
-                    {(provided) => (
-                      <tr
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                      >
-                        <td className="p-2 border">
-                          {rowIndex}
-                          <div className="flex">
-                            <Eye onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer" />
-                            <Pin onClick={() => toggleRowPin(rowIndex)} className="cursor-pointer" />
-                            <ArrowUpDown onClick={() => sortByRow(rowIndex)} className="cursor-pointer" />
-                          </div>
-                        </td>
-                        {Object.values(row).map((cell, cellIndex) => (
-                          <td key={cellIndex} className="p-2 border">
-                            {cell}
+                {Object.entries(matrixData).map(([rowIndex, row], index) => (
+                  !hiddenRows.includes(rowIndex) && (
+                    <Draggable key={rowIndex} draggableId={rowIndex} index={index}>
+                      {(provided) => (
+                        <tr
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          <td className="p-2 border">
+                            {rowIndex}
+                            <div className="flex">
+                              <Eye onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer" />
+                              <Pin onClick={() => toggleRowPin(rowIndex)} className="cursor-pointer" />
+                              <ArrowUpDown onClick={() => sortByRow(rowIndex)} className="cursor-pointer" />
+                            </div>
                           </td>
-                        ))}
-                      </tr>
-                    )}
-                  </Draggable>
+                          {Object.entries(row).map(([colName, cell], cellIndex) => (
+                            !hiddenCols.includes(colName) && (
+                              <td 
+                                key={cellIndex} 
+                                className="p-2 border"
+                                style={{ backgroundColor: getCellColor(cell as number, rowIndex, colName) }}
+                              >
+                                {cell}
+                              </td>
+                            )
+                          ))}
+                        </tr>
+                      )}
+                    </Draggable>
+                  )
                 ))}
                 {provided.placeholder}
               </tbody>
