@@ -102,6 +102,35 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
   const visibleColumns = Object.keys(Object.values(matrixData)[0]).filter(col => !hiddenCols.includes(col));
   const visibleRows = Object.keys(matrixData).filter(row => !hiddenRows.includes(row));
 
+  const RowIndexCell: React.FC<{ rowIndex: string }> = ({ rowIndex }) => {
+    const cellWidth = 150;
+    const iconWidth = 16; // Assuming each icon is 16px wide
+    const iconMargin = 4; // Assuming 4px margin between icons
+    const totalIconsWidth = (iconWidth + iconMargin) * 3; // Width for 3 icons
+    const maxTextWidth = cellWidth - totalIconsWidth - 8; // 8px for cell padding
+
+    let displayText = rowIndex;
+    if (rowIndex.length * 8 > maxTextWidth) { // Assuming 8px per character
+      const maxChars = Math.floor(maxTextWidth / 8) - 3; // -3 for the ellipsis
+      displayText = rowIndex.slice(0, maxChars) + '...';
+    }
+
+    return (
+      <td className="p-2 border sticky left-0 bg-white z-10" style={{ width: `${cellWidth}px`, maxWidth: `${cellWidth}px` }}>
+        <div className="flex items-center justify-between whitespace-nowrap">
+          <span className="truncate" style={{ maxWidth: `${maxTextWidth}px` }} title={rowIndex}>
+            {displayText}
+          </span>
+          <div className="flex items-center flex-shrink-0">
+            <Eye onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer w-4 h-4" />
+            <Pin onClick={() => toggleRowPin(rowIndex)} className="cursor-pointer w-4 h-4 ml-1" />
+            <ArrowUpDown onClick={() => sortByRow(rowIndex)} className="cursor-pointer w-4 h-4 ml-1" />
+          </div>
+        </div>
+      </td>
+    );
+  };
+
   return (
     <div className="w-full max-w-[1200px] mx-auto">
       <select 
@@ -119,13 +148,19 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
           <table className="border-collapse w-full">
             <thead>
               <tr>
-                <th className="p-2 border sticky left-0 top-0 bg-white z-20"></th>
+                <th className="p-2 border sticky left-0 top-0 bg-white z-20" style={{ width: '150px', maxWidth: '150px' }}></th>
                 {visibleColumns.map((colName, index) => (
                   <th key={index} className="p-2 border sticky top-0 bg-white z-10">
-                    {colName}
-                    <Eye onClick={() => toggleColVisibility(colName)} className="cursor-pointer ml-1" />
-                    <Pin onClick={() => toggleColPin(colName)} className="cursor-pointer ml-1" />
-                    <ArrowUpDown onClick={() => sortByColumn(colName)} className="cursor-pointer ml-1" />
+                    <div className="flex items-center justify-between whitespace-nowrap">
+                      <span className="truncate mr-1" style={{ maxWidth: '100px' }} title={colName}>
+                        {colName}
+                      </span>
+                      <div className="flex items-center flex-shrink-0">
+                        <Eye onClick={() => toggleColVisibility(colName)} className="cursor-pointer w-4 h-4" />
+                        <Pin onClick={() => toggleColPin(colName)} className="cursor-pointer w-4 h-4 ml-1" />
+                        <ArrowUpDown onClick={() => sortByColumn(colName)} className="cursor-pointer w-4 h-4 ml-1" />
+                      </div>
+                    </div>
                   </th>
                 ))}
                 <th className="p-2 border sticky top-0 right-0 bg-white z-20">
@@ -138,8 +173,12 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
                 </th>
                 {isHiddenColsPanelOpen && hiddenCols.map((colName, index) => (
                   <th key={`hidden-${index}`} className="p-2 border sticky top-0 bg-gray-200 z-10">
-                    {colName}
-                    <EyeOff onClick={() => toggleColVisibility(colName)} className="cursor-pointer ml-1" />
+                    <div className="flex items-center justify-between whitespace-nowrap">
+                      <span className="truncate mr-1" style={{ maxWidth: '100px' }} title={colName}>
+                        {colName}
+                      </span>
+                      <EyeOff onClick={() => toggleColVisibility(colName)} className="cursor-pointer w-4 h-4" />
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -147,12 +186,7 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
             <tbody>
               {visibleRows.map((rowIndex) => (
                 <tr key={rowIndex}>
-                  <td className="p-2 border sticky left-0 bg-white z-10">
-                    {rowIndex}
-                    <Eye onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer ml-1" />
-                    <Pin onClick={() => toggleRowPin(rowIndex)} className="cursor-pointer ml-1" />
-                    <ArrowUpDown onClick={() => sortByRow(rowIndex)} className="cursor-pointer ml-1" />
-                  </td>
+                  <RowIndexCell rowIndex={rowIndex} />
                   {visibleColumns.map((colName, cellIndex) => (
                     <td 
                       key={cellIndex} 
@@ -185,10 +219,7 @@ const TransitionMatrix: React.FC<TransitionMatrixProps> = ({ data }) => {
               </tr>
               {isHiddenRowsPanelOpen && hiddenRows.map((rowIndex) => (
                 <tr key={`hidden-${rowIndex}`} className="bg-gray-200">
-                  <td className="p-2 border sticky left-0 bg-gray-200 z-10">
-                    {rowIndex}
-                    <EyeOff onClick={() => toggleRowVisibility(rowIndex)} className="cursor-pointer ml-1" />
-                  </td>
+                  <RowIndexCell rowIndex={rowIndex} />
                   {visibleColumns.map((colName, cellIndex) => (
                     <td 
                       key={cellIndex} 

@@ -1,6 +1,6 @@
 export const sampleData = {
-    "cart":{
-        "cart":1.0,
+    "cartcartcartcartcartcartcartcart":{
+        "cartcartcartcartcartcartcartcart":1.0,
         "catalog":1709.0,
         "delivery_choice":0.0,
         "main":0.0,
@@ -14,7 +14,7 @@ export const sampleData = {
         "payment_cash":0.0
     },
     "catalog":{
-        "cart":571.0,
+        "cartcartcartcartcartcartcartcart":571.0,
         "catalog":4857.0,
         "delivery_choice":178.0,
         "main":4064.0,
@@ -28,7 +28,7 @@ export const sampleData = {
         "payment_cash":0.0
     },
     "delivery_choice":{
-        "cart":1686.0,
+        "cartcartcartcartcartcartcartcart":1686.0,
         "catalog":0.0,
         "delivery_choice":0.0,
         "main":0.0,
@@ -42,7 +42,7 @@ export const sampleData = {
         "payment_cash":0.0
     },
     "main":{
-        "cart":233.0,
+        "cartcartcartcartcartcartcartcart":233.0,
         "catalog":2545.0,
         "delivery_choice":71.0,
         "main":1042.0,
@@ -56,7 +56,7 @@ export const sampleData = {
         "payment_cash":47.0
     },
     "product1":{
-        "cart":0.0,
+        "cartcartcartcartcartcartcartcart":0.0,
         "catalog":1515.0,
         "delivery_choice":0.0,
         "main":0.0,
@@ -70,7 +70,7 @@ export const sampleData = {
         "payment_cash":0.0
     },
     "product2":{
-        "cart":0.0,
+        "cartcartcartcartcartcartcartcart":0.0,
         "catalog":2172.0,
         "delivery_choice":0.0,
         "main":0.0,
@@ -84,7 +84,7 @@ export const sampleData = {
         "payment_cash":0.0
     },
     "delivery_courier":{
-        "cart":0.0,
+        "cartcartcartcartcartcartcartcart":0.0,
         "catalog":0.0,
         "delivery_choice":834.0,
         "main":0.0,
@@ -98,7 +98,7 @@ export const sampleData = {
         "payment_cash":0.0
     },
     "delivery_pickup":{
-        "cart":0.0,
+        "cartcartcartcartcartcartcartcart":0.0,
         "catalog":0.0,
         "delivery_choice":506.0,
         "main":0.0,
@@ -112,7 +112,7 @@ export const sampleData = {
         "payment_cash":0.0
     },
     "payment_choice":{
-        "cart":0.0,
+        "cartcartcartcartcartcartcartcart":0.0,
         "catalog":0.0,
         "delivery_choice":0.0,
         "main":0.0,
@@ -126,7 +126,7 @@ export const sampleData = {
         "payment_cash":0.0
     },
     "payment_card":{
-        "cart":0.0,
+        "cartcartcartcartcartcartcartcart":0.0,
         "catalog":0.0,
         "delivery_choice":0.0,
         "main":0.0,
@@ -140,7 +140,7 @@ export const sampleData = {
         "payment_cash":0.0
     },
     "payment_done":{
-        "cart":0.0,
+        "cartcartcartcartcartcartcartcart":0.0,
         "catalog":0.0,
         "delivery_choice":0.0,
         "main":0.0,
@@ -154,7 +154,7 @@ export const sampleData = {
         "payment_cash":104.0
     },
     "payment_cash":{
-        "cart":0.0,
+        "cartcartcartcartcartcartcartcart":0.0,
         "catalog":0.0,
         "delivery_choice":0.0,
         "main":0.0,
